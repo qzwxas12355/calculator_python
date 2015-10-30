@@ -45,7 +45,7 @@ def operation_priority(token):
     elif token in HIGH_PRIORITY:
         return 2
     else:
-        return 3
+        return 0.5
 
 #Prepare epression for calculation. 
 #For it, delete all spaces, and give negative numbers good form.
@@ -73,7 +73,8 @@ def parse_to_postfix_form(token_list):
         elif is_close_bracket(token):
             while operation_stack and  not is_open_bracket(operation_stack[-1]):
                 postfix_form_stack.append(operation_stack.pop())
-            operation_stack.pop()
+            if operation_stack:
+                operation_stack.pop()
             if operation_stack and operation_stack[-1] in FUNCTIONS:
                 postfix_form_stack.append(operation_stack.pop())
         elif is_number(token):
@@ -82,11 +83,15 @@ def parse_to_postfix_form(token_list):
             while operation_stack \
                   and is_operator(operation_stack[-1]) \
                   and operation_priority(token) <= operation_priority(operation_stack[-1]):
-
                 postfix_form_stack.append(operation_stack.pop())
             operation_stack.append(token)
         elif is_function(token):
             operation_stack.append(token)
+        elif operation_stack \
+            and not(is_open_bracket(operation_stack[-1])  
+                    or is_close_bracket(operation_stack[-1])):
+            if operation_stack:
+                postfix_form_stack.append(operation_stack.pop())
     while operation_stack:
         postfix_form_stack.append(operation_stack.pop())
 
@@ -96,7 +101,6 @@ def parse_to_postfix_form(token_list):
 def calculate_expression(expression_postfix_form):
     for token in expression_postfix_form:
         if is_operator(token) or is_function(token):
-#            print expression_postfix_form
             operation_position = expression_postfix_form.index(token)
             expression_postfix_form = make_operation(expression_postfix_form, operation_position)
             
@@ -199,3 +203,4 @@ expression = raw_input("Enter expression:")
 
 calculate(expression)
 
+#9.30 gorodok 
