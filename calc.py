@@ -102,9 +102,16 @@ def calculate_expression(expression_postfix_form):
     for token in expression_postfix_form:
         if is_operator(token) or is_function(token):
             operation_position = expression_postfix_form.index(token)
-            expression_postfix_form = make_operation(expression_postfix_form, operation_position)
+            try:
+                expression_postfix_form = make_operation(expression_postfix_form, operation_position)
+            except IndexError:
+                raise ExpressionError
             
-    return expression_postfix_form[0]
+    if len(expression_postfix_form) == 1:
+        return expression_postfix_form[0] 
+    else: 
+        raise ExpressionError
+    
 
 def make_operation(expression_postfix_form, operation_position):
     operation = expression_postfix_form[operation_position]
@@ -112,7 +119,8 @@ def make_operation(expression_postfix_form, operation_position):
         expression_postfix_form = make_binary_operation(expression_postfix_form, operation_position)
     elif operation in UNARY_FUNCTIONS:
         expression_postfix_form = make_unary_operation(expression_postfix_form, operation_position)
-
+    else:
+        raise UnknownFunctionError(operation)
     return expression_postfix_form
 
 def make_unary_operation(expression_postfix_form, operation_position):
@@ -125,7 +133,7 @@ def make_unary_operation(expression_postfix_form, operation_position):
     operator = expression_postfix_form[operation_position]
 
     if operator == "abs":
-        result = math.abs(float(operand))
+        result = abs(float(operand))
     elif operator == "sqrt":
         result = math.sqrt(float(operand))
     elif operator == "sin":
@@ -181,7 +189,7 @@ def make_binary_operation(expression_postfix_form, operation_position):
     elif operator == "pow":
         result = float(operands[0]) ** float(operands[1])
     elif operator == "log":
-        result = math.log(float(operands[1]), float(operands[0]))
+        result = math.log(float(operands[0]), float(operands[1]))
 
     left_part.append(result)
     left_part.extend(right_part)
@@ -189,7 +197,9 @@ def make_binary_operation(expression_postfix_form, operation_position):
     return left_part
 
 def calculate(expression):
-    expression = prepare_expression(expression)
+    if not expression.strip():
+        raise EmptyExpressionError
+    expression = prepare_expression(expression.lower())
 
     token_list = get_token_list(expression)
 
@@ -197,10 +207,22 @@ def calculate(expression):
 
     calculated = calculate_expression(postfix_form_stack)
 
-    print "Result: %s" % (calculated)
+    return float(calculated)
 
-expression = raw_input("Enter expression:")
 
-calculate(expression)
+class ExpressionError(Exception):
+    def __str__(self):
+        return "Expression has wrong format"
+
+class UnknownFunctionError(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return "Expression has unknown function: " + str(self.value)
+
+class EmptyExpressionError(Exception):
+    def __str__(self):
+        return "Expression is empty"
+
 
 #9.30 gorodok 
