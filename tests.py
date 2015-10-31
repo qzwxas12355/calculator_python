@@ -58,6 +58,7 @@ class CalculateCheckResults(unittest.TestCase):
         ("-53//10", -53//10), 	
         ("5*e**2", 5*math.exp(2)),
         ("e**-2**4", math.exp((-2)**4)),
+
     )
 
     def test_calculate(self):
@@ -81,6 +82,9 @@ class CalculateBadInput(unittest.TestCase):
         "55*+*",
         "dad",
         "23+4+as+4",
+        "exp+5-1",
+        "log+3+6+2",
+        "log(5)+1+5+7"
     )
 
     def testBlank(self):
