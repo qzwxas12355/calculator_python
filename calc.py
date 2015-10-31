@@ -7,7 +7,7 @@ BINARY_FUNCTIONS = [
     ]
 UNARY_FUNCTIONS = [
              "abs",
-             "ln",
+             "log10",
              "sin", 
              "cos", 
              "tan", 
@@ -19,17 +19,22 @@ UNARY_FUNCTIONS = [
              "sqrt"
 ]
 FUNCTIONS = UNARY_FUNCTIONS + BINARY_FUNCTIONS
+
 LOW_PRIORITY = ["+", "-"]
 MIDDLE_PRIORITY = ["*", "/", "%", "//"]
 HIGH_PRIORITY = ["^", "**"]
-OPERATORS = LOW_PRIORITY + MIDDLE_PRIORITY + HIGH_PRIORITY
+HIGHEST_PRIORITY = ["#"]
+BINARY_OPERATORS = LOW_PRIORITY + MIDDLE_PRIORITY + HIGH_PRIORITY
+UNARY_OPERATORS = HIGHEST_PRIORITY
+OPERATORS = UNARY_OPERATORS + BINARY_OPERATORS
 
 def is_function(token):
     return token in FUNCTIONS
 
-def is_number(token):
+def is_valuable(token):
     try:
-        c = float(token)
+        if token != "e":
+            c = float(token)
         return True
     except:
         return False
@@ -44,25 +49,76 @@ def operation_priority(token):
         return 1
     elif token in HIGH_PRIORITY:
         return 2
-    else:
-        return 0.5
+    elif token in HIGHEST_PRIORITY:
+        return 3
 
 #Prepare epression for calculation. 
 #For it, delete all spaces, and give negative numbers good form.
 def prepare_expression(expression):
     if len(expression) >= 0:
-        if expression[0] == "-" or expression[0] == "+":
-            expression = "0" + expression
-    return expression.replace(" ", "").replace("(-","(0-"). replace("(+", "(0+")
+        if expression[0] == "+":
+            expression = expression[1:]
+        elif expression[0] == "-":
+            expression = expression.replace("-", "#")
+        expression = process_spaces(expression)
+        expression = process_repeated_signs(expression)
+        expression = process_mult_bracket(expression)
+        expression = process_unary_operators(expression)
+
+    return expression.replace(" ", "").replace("(-","(#"). replace("(+", "(")
+
+def process_spaces(expression):
+    return expression.replace(" ", "")
+
+def process_unary_operators(expression):
+    return expression.replace("*-", "*#")\
+        .replace("/-","/#") \
+        .replace("^-", "^#")\
+        .replace("**-", "**#")
+#Replace "++" to "+", "-+" to "-" etc.
+def process_repeated_signs(expression):
+    rigth_signs = expression.replace("++", "+")\
+        .replace("+-", "-")\
+        .replace("-+", "-")\
+        .replace("--", "+")
+    while rigth_signs != expression:
+        expression = rigth_signs
+        rigth_signs = expression.replace("--", "+")\
+            .replace("++", "+")\
+            .replace("+-", "-")\
+            .replace("-+", "-")
+    return expression
+ 
+#Replace '3(' to '3*(', and ')4' to ')*4'
+def process_mult_bracket(expression):
+    numb_mul_bracket = re.findall(r"\W+\d+\(|\)\d+|\.\d+\(|^\d+\(", expression)
+    multiplies = map(lambda a: (a, a.replace("(", "*(").replace(")", ")*")), numb_mul_bracket)
+    multiplies = set(multiplies)
+    for old, new in multiplies:
+        expression = expression.replace(old, new)
+    return expression
 
 def get_token_list(expression):
-    return re.findall(r"\/\/|\*\*|\.\w+|\W|\w+\.\w+|\w+\.|\w+", expression)
+    return re.findall(r"\l\o\g\w+|\/\/|\*\*|\.\w+|\W|\w+\.\w+|\w+\.|\w+", expression)
 
 def is_open_bracket(token):
     return token == "("
 
 def is_close_bracket(token):
     return token == ")"
+
+def should_pop_oprations(token, operation_stack):
+    if operation_stack and is_operator(operation_stack[-1]):
+        if operation_priority(token) <= operation_priority(operation_stack[-1]) \
+                and (token in LOW_PRIORITY \
+                        or token in MIDDLE_PRIORITY \
+                        or token in HIGHEST_PRIORITY):
+            return True
+        elif operation_priority(token) < operation_priority(operation_stack[-1]) \
+                and (token in HIGH_PRIORITY \
+                    or token in HIGHEST_PRIORITY):
+            return True
+    return False
 
 def parse_to_postfix_form(token_list):
     operation_stack = []
@@ -77,12 +133,10 @@ def parse_to_postfix_form(token_list):
                 operation_stack.pop()
             if operation_stack and operation_stack[-1] in FUNCTIONS:
                 postfix_form_stack.append(operation_stack.pop())
-        elif is_number(token):
+        elif is_valuable(token):
             postfix_form_stack.append(token)
         elif is_operator(token):
-            while operation_stack \
-                  and is_operator(operation_stack[-1]) \
-                  and operation_priority(token) <= operation_priority(operation_stack[-1]):
+            while should_pop_oprations(token, operation_stack):
                 postfix_form_stack.append(operation_stack.pop())
             operation_stack.append(token)
         elif is_function(token):
@@ -106,18 +160,24 @@ def calculate_expression(expression_postfix_form):
                 expression_postfix_form = make_operation(expression_postfix_form, operation_position)
             except IndexError:
                 raise ExpressionError
-            
+
     if len(expression_postfix_form) == 1:
-        return expression_postfix_form[0] 
+        return to_float(expression_postfix_form[0]) 
     else: 
         raise ExpressionError
+
+def to_float(number):
+    if number != "e":
+        return float(number)
+    else: 
+        return math.exp(1)
     
 
 def make_operation(expression_postfix_form, operation_position):
     operation = expression_postfix_form[operation_position]
-    if operation in BINARY_FUNCTIONS or operation in OPERATORS:
+    if operation in BINARY_FUNCTIONS or operation in BINARY_OPERATORS:
         expression_postfix_form = make_binary_operation(expression_postfix_form, operation_position)
-    elif operation in UNARY_FUNCTIONS:
+    elif operation in UNARY_FUNCTIONS or operation in UNARY_OPERATORS:
         expression_postfix_form = make_unary_operation(expression_postfix_form, operation_position)
     else:
         raise UnknownFunctionError(operation)
@@ -133,27 +193,29 @@ def make_unary_operation(expression_postfix_form, operation_position):
     operator = expression_postfix_form[operation_position]
 
     if operator == "abs":
-        result = abs(float(operand))
+        result = abs(to_float(operand))
     elif operator == "sqrt":
-        result = math.sqrt(float(operand))
+        result = math.sqrt(to_float(operand))
     elif operator == "sin":
-        result = math.sin(float(operand))
+        result = math.sin(to_float(operand))
     elif operator == "cos":
-        result = math.cos(float(operand))
+        result = math.cos(to_float(operand))
     elif operator == "tan":
-        result = math.tan(float(operand))
+        result = math.tan(to_float(operand))
     elif operator == "ctg":
-        result = 1/math.tan(float(operand))
+        result = 1/math.tan(to_float(operand))
     elif operator == "atan":
-        result = math.atan(float(operand))
+        result = math.atan(to_float(operand))
     elif operator == "acos":
-        result = math.acos(float(operand))
+        result = math.acos(to_float(operand))
     elif operator == "asin":
-        result = math.asin(float(operand))
-    elif operator == "ln":
-        result = math.log10(float(operand))
+        result = math.asin(to_float(operand))
+    elif operator == "log10":
+        result = math.log10(to_float(operand))
     elif operator == "exp":
-        result = math.exp(float(operand))
+        result = math.exp(to_float(operand))
+    elif operator == "#":
+        result = -to_float(operand)
 
     left_part.append(result)
     left_part.extend(right_part)
@@ -171,29 +233,30 @@ def make_binary_operation(expression_postfix_form, operation_position):
     operator = expression_postfix_form[operation_position]
 
     if operator == "+":
-        result = float(operands[0]) + float(operands[1])           
+        result = to_float(operands[0]) + to_float(operands[1])           
     elif operator == "-":
-        result = float(operands[0]) - float(operands[1])
+        result = to_float(operands[0]) - to_float(operands[1])
     elif operator == "*":
-        result = float(operands[0]) * float(operands[1])
+        result = to_float(operands[0]) * to_float(operands[1])
     elif operator == "/":
-        result = float(operands[0]) / float(operands[1])
-    elif operator == "**":
-        result = float(operands[0]) ** float(operands[1])
-    elif operator == "^":
-        result = float(operands[0]) ** float(operands[1])
+        result = to_float(operands[0]) / to_float(operands[1])
+    elif operator == "^" or operator == "**":
+        if operands[0] == "e":
+            result = math.exp(to_float(operands[1]))
+        else:
+            result = to_float(operands[0]) ** to_float(operands[1])
     elif operator == "%":
-        result = float(operands[0]) % float(operands[1])
+        result = to_float(operands[0]) % to_float(operands[1])
     elif operator == "//":
-        result = float(operands[0]) // float(operands[1])
+        result = to_float(operands[0]) // to_float(operands[1])
     elif operator == "pow":
-        result = float(operands[0]) ** float(operands[1])
+        result = to_float(operands[0]) ** to_float(operands[1])
     elif operator == "log":
-        result = math.log(float(operands[0]), float(operands[1]))
+        result = math.log(to_float(operands[0]), to_float(operands[1]))
 
     left_part.append(result)
     left_part.extend(right_part)
-    
+
     return left_part
 
 def calculate(expression):
