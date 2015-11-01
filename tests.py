@@ -87,7 +87,9 @@ class CalculateBadInput(unittest.TestCase):
         "23+4+as+4",
         "exp+5-1",
         "log+3+6+2",
-        "log(5)+1+5+7"
+        "log(5)+1+5+7",
+        "(56+7))*(7+6)",
+        "((143+4)+3(4)",
     )
 
     def testBlank(self):
@@ -96,7 +98,7 @@ class CalculateBadInput(unittest.TestCase):
 
     def testBadExpression(self):
         for expression in self.wrong_expressions:
-            self.assertRaises(calc.ExpressionError, calc.calculate, expression)
+            self.assertRaises(calc.SyntaxExpressionError, calc.calculate, expression)
 
 if __name__ == '__main__':
     unittest.main()

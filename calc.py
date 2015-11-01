@@ -126,10 +126,15 @@ def should_pop_oprations(token, operation_stack):
 def parse_to_postfix_form(token_list):
     operation_stack = []
     postfix_form_stack = []
+    brackets_counter = 0
     for token in token_list:
         if is_open_bracket(token):
             operation_stack.append(token)
+            brackets_counter += 1
         elif is_close_bracket(token):
+            brackets_counter -= 1
+            if brackets_counter < 0:
+                raise SyntaxExpressionError("expression has wrong number of brackets.")
             while operation_stack and  not is_open_bracket(operation_stack[-1]):
                 postfix_form_stack.append(operation_stack.pop())
             if operation_stack:
@@ -152,6 +157,9 @@ def parse_to_postfix_form(token_list):
     while operation_stack:
         postfix_form_stack.append(operation_stack.pop())
 
+    if brackets_counter != 0:
+                raise SyntaxExpressionError("expression has wrong number of brackets.")
+
     return postfix_form_stack
 
 #This function calculate postfix form expression
@@ -162,12 +170,12 @@ def calculate_expression(expression_postfix_form):
             try:
                 expression_postfix_form = make_operation(expression_postfix_form, operation_position)
             except IndexError:
-                raise ExpressionError
+                raise SyntaxExpressionError("check syntax of expression.")
 
     if len(expression_postfix_form) == 1:
         return to_float(expression_postfix_form[0]) 
     else: 
-        raise ExpressionError
+        raise SyntaxExpressionError("check syntax of expression.")
 
 def to_float(number):
     if number != "e":
@@ -276,9 +284,14 @@ def calculate(expression):
     return float(calculated)
 
 
-class ExpressionError(Exception):
+class SyntaxExpressionError(Exception):
+    def __init__(self, value=""):
+        self.value = value
     def __str__(self):
-        return "Expression has wrong format"
+        message = "Expression has wrong format"
+        if value != "":
+            message = message + ": " + value
+        return message
 
 class UnknownFunctionError(Exception):
     def __init__(self, value):
