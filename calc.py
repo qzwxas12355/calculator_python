@@ -93,7 +93,7 @@ def process_repeated_signs(expression):
  
 #Replace '3(' to '3*(', and ')4' to ')*4'
 def process_mult_bracket(expression):
-    numb_mul_bracket = re.findall(r"\W+\d+\(|\)\d+|\.\d+\(|^\d+\(", expression)
+    numb_mul_bracket = re.findall(r"\W\d+\(|\)\d+|\.\d+\(|^\d+\(", expression)
     expression = expression.replace(")(", ")*(")
     multiplies = map(lambda a: (a, a.replace("(", "*(").replace(")", ")*")), numb_mul_bracket)
     multiplies = set(multiplies)
@@ -134,7 +134,7 @@ def parse_to_postfix_form(token_list):
         elif is_close_bracket(token):
             brackets_counter -= 1
             if brackets_counter < 0:
-                raise SyntaxExpressionError("expression has wrong number of brackets.")
+                raise SyntaxExpressionError()
             while operation_stack and  not is_open_bracket(operation_stack[-1]):
                 postfix_form_stack.append(operation_stack.pop())
             if operation_stack:
@@ -158,7 +158,7 @@ def parse_to_postfix_form(token_list):
         postfix_form_stack.append(operation_stack.pop())
 
     if brackets_counter != 0:
-                raise SyntaxExpressionError("expression has wrong number of brackets.")
+        raise SyntaxExpressionError()
 
     return postfix_form_stack
 
@@ -170,12 +170,12 @@ def calculate_expression(expression_postfix_form):
             try:
                 expression_postfix_form = make_operation(expression_postfix_form, operation_position)
             except IndexError:
-                raise SyntaxExpressionError("check syntax of expression.")
+                raise SyntaxExpressionError()
 
     if len(expression_postfix_form) == 1:
         return to_float(expression_postfix_form[0]) 
     else: 
-        raise SyntaxExpressionError("check syntax of expression.")
+        raise SyntaxExpressionError()
 
 def to_float(number):
     if number != "e":
@@ -187,7 +187,7 @@ def to_float(number):
 def make_operation(expression_postfix_form, operation_position):
     operation = expression_postfix_form[operation_position]
     if operation in BINARY_FUNCTIONS or operation in BINARY_OPERATORS:
-        expression_postfix_form = make_binary_operation(expression_postfix_form, operation_position)
+        expression_postfix_form=make_binary_operation(expression_postfix_form, operation_position)
     elif operation in UNARY_FUNCTIONS or operation in UNARY_OPERATORS:
         expression_postfix_form = make_unary_operation(expression_postfix_form, operation_position)
     else:
@@ -231,6 +231,8 @@ def make_unary_operation(expression_postfix_form, operation_position):
     left_part.append(result)
     left_part.extend(right_part)
     
+
+
     return left_part
 
 
@@ -240,8 +242,13 @@ def make_binary_operation(expression_postfix_form, operation_position):
     left_part = expression_postfix_form[:operation_position-2]
     right_part = expression_postfix_form[operation_position+1:]
     result = 0.0
-
     operator = expression_postfix_form[operation_position]
+    
+ #   expression_postfix_form.pop(operation_position)
+ #   expression_postfix_form.pop(operation_position-1)
+#    expression_postfix_form.pop(operation_position-2)
+
+    
 
     if operator == "+":
         result = to_float(operands[0]) + to_float(operands[1])           
@@ -265,8 +272,12 @@ def make_binary_operation(expression_postfix_form, operation_position):
     elif operator == "log":
         result = math.log(to_float(operands[0]), to_float(operands[1]))
 
+ #   expression_postfix_form.insert(operation_position-2, result)
+
     left_part.append(result)
     left_part.extend(right_part)
+
+ #   print left_part, expression_postfix_form
 
     return left_part
 
@@ -285,13 +296,9 @@ def calculate(expression):
 
 
 class SyntaxExpressionError(Exception):
-    def __init__(self, value=""):
-        self.value = value
     def __str__(self):
-        message = "Expression has wrong format"
-        if value != "":
-            message = message + ": " + value
-        return message
+        return "Expression has wrong format"
+
 
 class UnknownFunctionError(Exception):
     def __init__(self, value):

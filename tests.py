@@ -62,6 +62,8 @@ class CalculateCheckResults(unittest.TestCase):
         ("e**-2**4", math.exp((-2)**4)),
         ("exp(exp(exp(1)))", math.exp(math.exp(math.exp(1)))),
         ("(2+2)(4+23)", (2+2)*(4+23)),
+        ("1*4+3.3/(3+.3)*3(sqrt(4))/(sin(0)+1)", 1*4+3.3/(3+.3)*3*(math.sqrt(4))/(math.sin(0)+1)),
+        ("10*e^0*log10(.4* -5/ -0.1-10) - -abs(-53//10) + -5", 10*math.exp(0)*math.log10(.4* -5/ -0.1-10) - -abs(-53//10) + -5),
     )
 
     def test_calculate(self):
