@@ -64,11 +64,16 @@ class CalculateCheckResults(unittest.TestCase):
         ("(2+2)(4+23)", (2+2)*(4+23)),
         ("1*4+3.3/(3+.3)*3(sqrt(4))/(sin(0)+1)", 1*4+3.3/(3+.3)*3*(math.sqrt(4))/(math.sin(0)+1)),
         ("10*e^0*log10(.4* -5/ -0.1-10) - -abs(-53//10) + -5", 10*math.exp(0)*math.log10(.4* -5/ -0.1-10) - -abs(-53//10) + -5),
+        ("(1+2)3(4+5)", (1+2)*3*(4+5)),
+        ("(1+2).3(4+5)", (1+2)*0.3*(4+5)),
+        ("(1+2)3.3(4+5)", (1+2)*3.3*(4+5)),
+        ("(4+3)log(4,2)", (4+3)*math.log(4,2)),
+        ("log(9,3)(4+3)log(4,2)", math.log(9,3)*(4+3)*math.log(4,2)),
     )
 
     def test_calculate(self):
         for expression, result in self.results:
-            evaluated = calc.calculate(expression)	
+            evaluated = calc.calculate(expression)
             self.assertEqual(result, evaluated)
 
 class CalculateBadInput(unittest.TestCase):
