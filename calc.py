@@ -93,7 +93,7 @@ def process_repeated_signs(expression):
  
 #Replace '3(' to '3*(', and ')4' to ')*4'
 def process_mult_bracket(expression):
-    numb_mul_bracket = re.findall(r"[*+-/%#]\d+\(|\)\.\d+\(|\)\d+\(|\)\d+|^\d+\(|\)\w+", expression)
+    numb_mul_bracket = re.findall(r"[*+-/%#]\d+\(|\)\.\d+\(|\)\d+\.\(|\)\d+\(|\)\d+|^\d+\(|\)\w+", expression)
     expression = expression.replace(")(", ")*(")
     multiplies = map(lambda a: (a, a.replace("(", "*(").replace(")", ")*")), numb_mul_bracket)
     multiplies = set(multiplies)
