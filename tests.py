@@ -70,6 +70,7 @@ class CalculateCheckResults(unittest.TestCase):
         ("(4+3)log(4,2)", (4+3)*math.log(4,2)),
         ("log(9,3)(4+3)log(4,2)", math.log(9,3)*(4+3)*math.log(4,2)),
         ("(6+2)3.(4+5)", (6+2)*3.0*(4+5)),
+        ("8e^5", 8*math.exp(5)),
     )
 
     def test_calculate(self):

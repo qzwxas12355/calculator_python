@@ -65,9 +65,18 @@ def prepare_expression(expression):
         expression = process_spaces(expression)
         expression = process_repeated_signs(expression)
         expression = process_mult_bracket(expression)
+        expression = process_numb_before_func(expression)
         expression = process_unary_operators(expression)
 
     return expression.replace(" ", "").replace("(-","(#"). replace("(+", "(")
+
+def process_numb_before_func(expression):
+    numb_before_func = re.findall(r"\d+[a-z]+", expression)
+    if numb_before_func:
+        for i in numb_before_func:
+            tmp = re.split('([\d]+)', i.strip())
+            expression = expression.replace(i, tmp[1]+"*"+tmp[2])
+    return expression
 
 def process_spaces(expression):
     return expression.replace(" ", "")
@@ -95,10 +104,11 @@ def process_repeated_signs(expression):
 def process_mult_bracket(expression):
     numb_mul_bracket = re.findall(r"[*+-/%#]\d+\(|\)\.\d+\(|\)\d+\.\(|\)\d+\(|\)\d+|^\d+\(|\)\w+", expression)
     expression = expression.replace(")(", ")*(")
-    multiplies = map(lambda a: (a, a.replace("(", "*(").replace(")", ")*")), numb_mul_bracket)
-    multiplies = set(multiplies)
-    for old, new in multiplies:
-        expression = expression.replace(old, new)
+    if numb_mul_bracket:
+        multiplies = map(lambda a: (a, a.replace("(", "*(").replace(")", ")*")), numb_mul_bracket)
+        multiplies = set(multiplies)
+        for old, new in multiplies:
+            expression = expression.replace(old, new)
     return expression
 
 def get_token_list(expression):
@@ -111,17 +121,18 @@ def is_close_bracket(token):
     return token == ")"
 
 def should_pop_oprations(token, operation_stack):
+    should = False
     if operation_stack and is_operator(operation_stack[-1]):
         if operation_priority(token) <= operation_priority(operation_stack[-1]) \
                 and (token in LOW_PRIORITY \
                         or token in MIDDLE_PRIORITY \
                         or token in HIGHEST_PRIORITY):
-            return True
+            should = True
         elif operation_priority(token) < operation_priority(operation_stack[-1]) \
                 and (token in HIGH_PRIORITY \
                     or token in HIGHEST_PRIORITY):
-            return True
-    return False
+            should = True
+    return should
 
 def parse_to_postfix_form(token_list):
     operation_stack = []
@@ -246,9 +257,7 @@ def make_binary_operation(expression_postfix_form, operation_position):
     
  #   expression_postfix_form.pop(operation_position)
  #   expression_postfix_form.pop(operation_position-1)
-#    expression_postfix_form.pop(operation_position-2)
-
-    
+#    expression_postfix_form.pop(operation_position-2)    
 
     if operator == "+":
         result = to_float(operands[0]) + to_float(operands[1])           
