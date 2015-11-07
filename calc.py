@@ -292,7 +292,7 @@ def make_binary_operation(expression_postfix_form, operation_position):
 
 def calculate(expression):
     if not expression.strip():
-        raise EmptyExpressionError
+        return 0.0
     expression = prepare_expression(expression.lower())
 
     token_list = get_token_list(expression)
@@ -314,10 +314,5 @@ class UnknownFunctionError(Exception):
         self.value = value
     def __str__(self):
         return "Expression has unknown function: " + str(self.value)
-
-class EmptyExpressionError(Exception):
-    def __str__(self):
-        return "Expression is empty"
-
 
 #9.30 gorodok 

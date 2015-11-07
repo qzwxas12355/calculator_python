@@ -71,6 +71,9 @@ class CalculateCheckResults(unittest.TestCase):
         ("log(9,3)(4+3)log(4,2)", math.log(9,3)*(4+3)*math.log(4,2)),
         ("(6+2)3.(4+5)", (6+2)*3.0*(4+5)),
         ("8e^5", 8*math.exp(5)),
+        ("", 0.0),
+        (" ", 0.0),
+        ("          ", 0.0),
     )
 
     def test_calculate(self):
@@ -79,12 +82,6 @@ class CalculateCheckResults(unittest.TestCase):
             self.assertEqual(result, evaluated)
 
 class CalculateBadInput(unittest.TestCase):
-    blank_data = (
-        "",
-        "              ",
-        " ",
-    )
-
     wrong_expressions = (
         "3***7",
         "65///2",
@@ -100,10 +97,6 @@ class CalculateBadInput(unittest.TestCase):
         "(56+7))*(7+6)",
         "((143+4)+3(4)",
     )
-
-    def testBlank(self):
-        for data in self.blank_data:
-            self.assertRaises(calc.EmptyExpressionError, calc.calculate, data)
 
     def testBadExpression(self):
         for expression in self.wrong_expressions:
