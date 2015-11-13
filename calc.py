@@ -3,29 +3,57 @@
 import re
 import math
 
-BINARY_FUNCTIONS = [
-             "pow", 
-             "log"
-    ]
-UNARY_FUNCTIONS = [
-             "abs",
-             "log10",
-             "sin", 
-             "cos", 
-             "tan", 
-             "ctg", 
-             "acos", 
-             "asin", 
-             "atan", 
-             "exp", 
-             "sqrt"
-]
-FUNCTIONS = UNARY_FUNCTIONS + BINARY_FUNCTIONS
+UNARY_FUNCTIONS = {
+    "abs" : abs,
+    "log10" : math.log10,
+    "sin" : math.sin,
+    "cos" : math.cos,
+    "tan" : math.tan,
+    "acos" : math.acos,
+    "asin" : math.asin,
+    "atan" : math.atan,
+    "exp" : math.exp,
+    "sqrt" : math.sqrt,
+    "#" : float.__neg__,
+    "degrees" : math.degrees,
+    "radians" : math.radians,
+    "cosh" : math.cosh,
+    "sinh" : math.sinh,
+    "tanh" : math.tanh,
+    "acosh" : math.acosh,
+    "asinh" : math.asinh,
+    "atanh" : math.atanh,
+}
 
-LOW_PRIORITY = ["+", "-"]
-MIDDLE_PRIORITY = ["*", "/", "%", "//"]
-HIGH_PRIORITY = ["^", "**"]
-HIGHEST_PRIORITY = ["#"]
+CONSTANTS = {
+    "e" : math.e,
+    "pi" : math.pi,
+}
+
+BINARY_FUNCTIONS = {
+    "pow" : float.__pow__,
+    "log" : math.log,
+    "atan2" : math.atan2,
+    "hypot" : math.hypot,
+}
+
+OPERATORSs = {
+    "+" : float.__add__,
+    "-" : float.__sub__,
+    "*" : float.__mul__,
+    "/" : float.__div__,
+    "//" : float.__floordiv__,
+    "%" : float.__mod__,
+    "**" : float.__pow__,
+    "^" : float.__pow__,
+}
+
+FUNCTIONS = tuple(UNARY_FUNCTIONS.keys() + BINARY_FUNCTIONS.keys())
+
+LOW_PRIORITY = ("+", "-",)
+MIDDLE_PRIORITY = ("*", "/", "%", "//",)
+HIGH_PRIORITY = ("^", "**",)
+HIGHEST_PRIORITY = ("#",)
 BINARY_OPERATORS = LOW_PRIORITY + MIDDLE_PRIORITY + HIGH_PRIORITY
 UNARY_OPERATORS = HIGHEST_PRIORITY
 OPERATORS = UNARY_OPERATORS + BINARY_OPERATORS
@@ -35,7 +63,7 @@ def is_function(token):
 
 def is_valuable(token):
     try:
-        if token != "e":
+        if not token in CONSTANTS.keys():
             c = float(token)
         return True
     except:
@@ -85,24 +113,38 @@ def process_unary_operators(expression):
     return expression.replace("*-", "*#")\
         .replace("/-","/#") \
         .replace("^-", "^#")\
-        .replace("**-", "**#")
+        .replace("**-", "**#")\
+        .replace("++", "+")\
+        .replace("-+", "-")\
+        .replace("+-", "+#")\
+        .replace("--", "-#")
+        
 #Replace "++" to "+", "-+" to "-" etc.
 def process_repeated_signs(expression):
-    rigth_signs = expression.replace("++", "+")\
-        .replace("+-", "-")\
-        .replace("-+", "-")\
-        .replace("--", "+")
-    while rigth_signs != expression:
-        expression = rigth_signs
-        rigth_signs = expression.replace("--", "+")\
-            .replace("++", "+")\
-            .replace("+-", "-")\
-            .replace("-+", "-")
+    sequences = find_sequences_signs(expression)
+    need_to_replace = process_sequences_signs(sequences)
+    return replace_sequences(expression, need_to_replace)
+
+def find_sequences_signs(expression):
+    return re.findall("[+-]{3,}", expression)
+
+def process_sequences_signs(multiplied_signs):
+    need_to_replace = {}
+    for sequence in multiplied_signs:
+        count = sequence[1:].count('-')
+        if count % 2 == 0:
+            need_to_replace[sequence] = sequence[:1]
+        else:
+            need_to_replace[sequence] = sequence[:1] + '-'
+    return need_to_replace
+def replace_sequences(expression, need_to_replace):
+    for old, new in need_to_replace.iteritems():
+         expression = expression.replace(old, new)
     return expression
  
 #Replace '3(' to '3*(', and ')4' to ')*4'
 def process_mult_bracket(expression):
-    numb_mul_bracket = re.findall(r"[*+-/%#]\d+\(|\)\.\d+\(|\)\d+\.\(|\)\d+\(|\)\d+|^\d+\(|\)\w+", expression)
+    numb_mul_bracket = re.findall(r"[*+-/%#]\d+\(|\p\i\(|\e\(|\)\.\d+\(|\)\d+\.\(|\)\d+\(|\)\d+|^\d+\(|\)\w+", expression)
     expression = expression.replace(")(", ")*(")
     if numb_mul_bracket:
         multiplies = map(lambda a: (a, a.replace("(", "*(").replace(")", ")*")), numb_mul_bracket)
@@ -189,17 +231,17 @@ def calculate_expression(expression_postfix_form):
         raise SyntaxExpressionError()
 
 def to_float(number):
-    if number != "e":
+    if not number in CONSTANTS.keys():
         return float(number)
     else: 
-        return math.exp(1)
+        return CONSTANTS[number]
     
 
 def make_operation(expression_postfix_form, operation_position):
     operation = expression_postfix_form[operation_position]
-    if operation in BINARY_FUNCTIONS or operation in BINARY_OPERATORS:
+    if operation in BINARY_FUNCTIONS.keys() or operation in BINARY_OPERATORS:
         expression_postfix_form=make_binary_operation(expression_postfix_form, operation_position)
-    elif operation in UNARY_FUNCTIONS or operation in UNARY_OPERATORS:
+    elif operation in UNARY_FUNCTIONS.keys():
         expression_postfix_form = make_unary_operation(expression_postfix_form, operation_position)
     else:
         raise UnknownFunctionError(operation)
@@ -214,36 +256,11 @@ def make_unary_operation(expression_postfix_form, operation_position):
 
     operator = expression_postfix_form[operation_position]
 
-    if operator == "abs":
-        result = abs(to_float(operand))
-    elif operator == "sqrt":
-        result = math.sqrt(to_float(operand))
-    elif operator == "sin":
-        result = math.sin(to_float(operand))
-    elif operator == "cos":
-        result = math.cos(to_float(operand))
-    elif operator == "tan":
-        result = math.tan(to_float(operand))
-    elif operator == "ctg":
-        result = 1/math.tan(to_float(operand))
-    elif operator == "atan":
-        result = math.atan(to_float(operand))
-    elif operator == "acos":
-        result = math.acos(to_float(operand))
-    elif operator == "asin":
-        result = math.asin(to_float(operand))
-    elif operator == "log10":
-        result = math.log10(to_float(operand))
-    elif operator == "exp":
-        result = math.exp(to_float(operand))
-    elif operator == "#":
-        result = -to_float(operand)
+    result = UNARY_FUNCTIONS[operator](to_float(operand))
 
     left_part.append(result)
     left_part.extend(right_part)
     
-
-
     return left_part
 
 
@@ -254,39 +271,16 @@ def make_binary_operation(expression_postfix_form, operation_position):
     right_part = expression_postfix_form[operation_position+1:]
     result = 0.0
     operator = expression_postfix_form[operation_position]
-    
- #   expression_postfix_form.pop(operation_position)
- #   expression_postfix_form.pop(operation_position-1)
-#    expression_postfix_form.pop(operation_position-2)    
 
-    if operator == "+":
-        result = to_float(operands[0]) + to_float(operands[1])           
-    elif operator == "-":
-        result = to_float(operands[0]) - to_float(operands[1])
-    elif operator == "*":
-        result = to_float(operands[0]) * to_float(operands[1])
-    elif operator == "/":
-        result = to_float(operands[0]) / to_float(operands[1])
-    elif operator == "^" or operator == "**":
-        if operands[0] == "e":
-            result = math.exp(to_float(operands[1]))
-        else:
-            result = to_float(operands[0]) ** to_float(operands[1])
-    elif operator == "%":
-        result = to_float(operands[0]) % to_float(operands[1])
-    elif operator == "//":
-        result = to_float(operands[0]) // to_float(operands[1])
-    elif operator == "pow":
-        result = to_float(operands[0]) ** to_float(operands[1])
-    elif operator == "log":
-        result = math.log(to_float(operands[0]), to_float(operands[1]))
-
- #   expression_postfix_form.insert(operation_position-2, result)
+#    if (operator == "^" or operator == "**") and operands[0] == "e":
+#        result = math.exp(to_float(operands[1]))
+    if operator in OPERATORSs.keys():
+        result = OPERATORSs[operator](to_float(operands[0]), to_float(operands[1]))
+    elif operator in BINARY_FUNCTIONS.keys():
+        result = BINARY_FUNCTIONS[operator](to_float(operands[0]), to_float(operands[1]))
 
     left_part.append(result)
     left_part.extend(right_part)
-
- #   print left_part, expression_postfix_form
 
     return left_part
 
