@@ -3,7 +3,7 @@
 import re
 import math
 
-UNARY_FUNCTIONS = {
+UNARY_FUNCTIONS_DICT = {
     "abs" : abs,
     "log10" : math.log10,
     "sin" : math.sin,
@@ -25,19 +25,19 @@ UNARY_FUNCTIONS = {
     "atanh" : math.atanh,
 }
 
-CONSTANTS = {
+CONSTANTS_DICT = {
     "e" : math.e,
     "pi" : math.pi,
 }
 
-BINARY_FUNCTIONS = {
+BINARY_FUNCTIONS_DICT = {
     "pow" : float.__pow__,
     "log" : math.log,
     "atan2" : math.atan2,
     "hypot" : math.hypot,
 }
 
-OPERATORSs = {
+OPERATORS_DICT = {
     "+" : float.__add__,
     "-" : float.__sub__,
     "*" : float.__mul__,
@@ -48,7 +48,7 @@ OPERATORSs = {
     "^" : float.__pow__,
 }
 
-FUNCTIONS = tuple(UNARY_FUNCTIONS.keys() + BINARY_FUNCTIONS.keys())
+FUNCTIONS = tuple(UNARY_FUNCTIONS_DICT.keys() + BINARY_FUNCTIONS_DICT.keys())
 
 LOW_PRIORITY = ("+", "-",)
 MIDDLE_PRIORITY = ("*", "/", "%", "//",)
@@ -63,7 +63,7 @@ def is_function(token):
 
 def is_valuable(token):
     try:
-        if not token in CONSTANTS.keys():
+        if not token in CONSTANTS_DICT.keys():
             c = float(token)
         return True
     except:
@@ -231,17 +231,17 @@ def calculate_expression(expression_postfix_form):
         raise SyntaxExpressionError()
 
 def to_float(number):
-    if not number in CONSTANTS.keys():
+    if not number in CONSTANTS_DICT.keys():
         return float(number)
     else: 
-        return CONSTANTS[number]
+        return CONSTANTS_DICT[number]
     
 
 def make_operation(expression_postfix_form, operation_position):
     operation = expression_postfix_form[operation_position]
-    if operation in BINARY_FUNCTIONS.keys() or operation in BINARY_OPERATORS:
+    if operation in BINARY_FUNCTIONS_DICT.keys() or operation in BINARY_OPERATORS:
         expression_postfix_form=make_binary_operation(expression_postfix_form, operation_position)
-    elif operation in UNARY_FUNCTIONS.keys():
+    elif operation in UNARY_FUNCTIONS_DICT.keys():
         expression_postfix_form = make_unary_operation(expression_postfix_form, operation_position)
     else:
         raise UnknownFunctionError(operation)
@@ -256,7 +256,7 @@ def make_unary_operation(expression_postfix_form, operation_position):
 
     operator = expression_postfix_form[operation_position]
 
-    result = UNARY_FUNCTIONS[operator](to_float(operand))
+    result = UNARY_FUNCTIONS_DICT[operator](to_float(operand))
 
     left_part.append(result)
     left_part.extend(right_part)
@@ -274,10 +274,10 @@ def make_binary_operation(expression_postfix_form, operation_position):
 
 #    if (operator == "^" or operator == "**") and operands[0] == "e":
 #        result = math.exp(to_float(operands[1]))
-    if operator in OPERATORSs.keys():
-        result = OPERATORSs[operator](to_float(operands[0]), to_float(operands[1]))
-    elif operator in BINARY_FUNCTIONS.keys():
-        result = BINARY_FUNCTIONS[operator](to_float(operands[0]), to_float(operands[1]))
+    if operator in OPERATORS_DICT.keys():
+        result = OPERATORS_DICT[operator](to_float(operands[0]), to_float(operands[1]))
+    elif operator in BINARY_FUNCTIONS_DICT.keys():
+        result = BINARY_FUNCTIONS_DICT[operator](to_float(operands[0]), to_float(operands[1]))
 
     left_part.append(result)
     left_part.extend(right_part)
