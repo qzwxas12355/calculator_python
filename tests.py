@@ -1,8 +1,8 @@
 #!usr/bin/python
     
-import calc
 import unittest
 import math
+import Calculator
 
 class CalculateCheckResults(unittest.TestCase):
     results = (
@@ -109,7 +109,7 @@ class CalculateCheckResults(unittest.TestCase):
 
     def test_calculate(self):
         for expression, result in self.results:
-            evaluated = calc.calculate(expression)
+            evaluated = Calculator.calculate(expression)
             self.assertEqual(result, evaluated)
 
 class CalculateBadInput(unittest.TestCase):
@@ -131,7 +131,7 @@ class CalculateBadInput(unittest.TestCase):
 
     def testBadExpression(self):
         for expression in self.wrong_expressions:
-            self.assertRaises(calc.SyntaxExpressionError, calc.calculate, expression)
+            self.assertRaises(Calculator.errors.SyntaxExpressionError, Calculator.calculate, expression)
 
 if __name__ == '__main__':
     unittest.main()
