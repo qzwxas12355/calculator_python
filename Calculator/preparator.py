@@ -7,25 +7,17 @@ from errors import *
 
 def prepare_expression(expression):
     if len(expression) >= 0:
-        #if expression[0] == "+":
-         #   expression = "0" + expression
-        #elif expression[0] == "-":
-         #   expression = expression.replace("-", "#")
-        #print expression[0]
         wrong_functions = is_good(expression)
         if wrong_functions:
-            #print wrong_functions
             raise UnknownFunction(', '.join(wrong_functions))
         if not is_valuable(expression[0]):
             expression = "(" + expression + ")"
-            #print expression, "!!!!!!!!!!!!!!111"
         expression = process_spaces(expression)
         expression = process_repeated_signs(expression)
         expression = process_mult_bracket(expression)
         expression = process_numb_before_func(expression)
         expression = process_unary_operators(expression)
         expression = process_logarithm(expression)
-        #print expression
 
     return expression.replace(" ", "").replace("(-","(#"). replace("(+", "(")
 

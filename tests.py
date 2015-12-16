@@ -114,7 +114,6 @@ class CalculateCheckResults(unittest.TestCase):
 
     def test_calculate(self):
         for expression, result in self.results:
-            #print expression
             evaluated = Calculator.calculate(expression)
             self.assertEqual(result, evaluated)
 
@@ -137,7 +136,6 @@ class CalculateBadInput(unittest.TestCase):
 
     def testBadExpression(self):
         for expression in self.wrong_expressions:
-            #print expression
             self.assertRaises(Calculator.errors.SyntaxExpressionError, Calculator.calculate, expression)
 
 class CalculateBadFunction(unittest.TestCase):

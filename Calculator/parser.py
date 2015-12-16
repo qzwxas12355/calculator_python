@@ -14,7 +14,6 @@ def parse_to_postfix_form(token_list):
     postfix_form_stack = []
     brackets_counter = 0
     for token in token_list:
-        #print token_list, token, operation_stack
         if is_open_bracket(token):
             operation_stack.append(token)
             brackets_counter += 1

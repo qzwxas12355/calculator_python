@@ -4,7 +4,6 @@ from errors import *
 #This function calculate postfix form expression
 def calculate_expression(expression_postfix_form):
     for token in expression_postfix_form:
-        #print expression_postfix_form
         if is_operator(token) or is_function(token):
             operation_position = expression_postfix_form.index(token)
             if operation_position == 0:
@@ -61,7 +60,6 @@ def make_binary_operation(expression_postfix_form, operation_position):
     result = 0.0
     operator = expression_postfix_form[operation_position]
 
-    #print operands
     if operator in OPERATORS_DICT.keys():
         result = OPERATORS_DICT[operator](to_float(operands[0]), to_float(operands[1]))
     elif operator in BINARY_FUNCTIONS_DICT.keys():
