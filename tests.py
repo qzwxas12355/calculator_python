@@ -6,6 +6,11 @@ import Calculator
 
 class CalculateCheckResults(unittest.TestCase):
     results = (
+        ("--+11//10-8", --+11//10-8),
+        ("+-+11//10-8", +-+11//10-8),
+        ("+++11//10-8", +++11//10-8),
+        ("+5-65", +5-65),
+        ("71%24", 71%24),
         ("2+2", 2+2),
         ("1", 1),
         ("4*4", 4*4),
@@ -109,6 +114,7 @@ class CalculateCheckResults(unittest.TestCase):
 
     def test_calculate(self):
         for expression, result in self.results:
+            #print expression
             evaluated = Calculator.calculate(expression)
             self.assertEqual(result, evaluated)
 
@@ -124,14 +130,33 @@ class CalculateBadInput(unittest.TestCase):
         "23+4+as+4",
         "exp+5-1",
         "log+3+6+2",
-        "log(5)+1+5+7",
+        "log()+1+5+7",
         "(56+7))*(7+6)",
         "((143+4)+3(4)",
     )
 
     def testBadExpression(self):
         for expression in self.wrong_expressions:
+            #print expression
             self.assertRaises(Calculator.errors.SyntaxExpressionError, Calculator.calculate, expression)
+
+class CalculateBadFunction(unittest.TestCase):
+    wrong_expressions = (
+        "564&43",
+        "1+5+2/5*2#4",
+        "log10(43)+@-4",
+        "abs(-32//45)$+4",
+        "432+12!+54-7654?",
+        "342;+432",
+        "87\\454",
+    )
+
+
+    def testUnknownFunctions(self):
+        for expression in self.wrong_expressions:
+            #print expression
+            self.assertRaises(Calculator.errors.UnknownFunction, Calculator.calculate, expression)
+
 
 if __name__ == '__main__':
     unittest.main()

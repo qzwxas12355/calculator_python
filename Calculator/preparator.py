@@ -2,20 +2,38 @@
 #For it, delete all spaces, and give negative numbers good form.
 
 import re
+from shared import *
+from errors import *
 
 def prepare_expression(expression):
     if len(expression) >= 0:
-        if expression[0] == "+":
-            expression = expression[1:]
-        elif expression[0] == "-":
-            expression = expression.replace("-", "#")
+        #if expression[0] == "+":
+         #   expression = "0" + expression
+        #elif expression[0] == "-":
+         #   expression = expression.replace("-", "#")
+        #print expression[0]
+        wrong_functions = is_good(expression)
+        if wrong_functions:
+            #print wrong_functions
+            raise UnknownFunction(', '.join(wrong_functions))
+        if not is_valuable(expression[0]):
+            expression = "(" + expression + ")"
+            #print expression, "!!!!!!!!!!!!!!111"
         expression = process_spaces(expression)
         expression = process_repeated_signs(expression)
         expression = process_mult_bracket(expression)
         expression = process_numb_before_func(expression)
         expression = process_unary_operators(expression)
+        expression = process_logarithm(expression)
+        #print expression
 
     return expression.replace(" ", "").replace("(-","(#"). replace("(+", "(")
+
+def is_good(expression):
+    return re.findall("[^\d\w\+\*\-\/\.\(\)\s\^\,\%]", expression)
+
+def process_logarithm(expression):
+    return expression.replace("log10", "lg").replace("log", "ln")
 
 def process_numb_before_func(expression):
     numb_before_func = re.findall(r"\d+[a-z]+", expression)
@@ -42,7 +60,15 @@ def process_unary_operators(expression):
 def process_repeated_signs(expression):
     sequences = find_sequences_signs(expression)
     need_to_replace = process_sequences_signs(sequences)
-    return replace_sequences(expression, need_to_replace)
+    replaced = replace_sequences(expression, need_to_replace)
+    result = process_brackets(replaced) 
+    return result
+
+def process_brackets(expression):
+    return expression.replace("(-+", "(-")\
+        .replace("(+-", "(-")\
+        .replace("(--", "(")\
+        .replace("(++", "(")
 
 def find_sequences_signs(expression):
     return re.findall("[+-]{3,}", expression)

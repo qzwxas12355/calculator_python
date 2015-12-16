@@ -14,6 +14,7 @@ def parse_to_postfix_form(token_list):
     postfix_form_stack = []
     brackets_counter = 0
     for token in token_list:
+        #print token_list, token, operation_stack
         if is_open_bracket(token):
             operation_stack.append(token)
             brackets_counter += 1
@@ -35,6 +36,8 @@ def parse_to_postfix_form(token_list):
             operation_stack.append(token)
         elif is_function(token):
             operation_stack.append(token)
+        elif len(operation_stack) > 2 and operation_stack[-2] == "ln" and token== ",":
+            operation_stack[-2] = "log"
         elif operation_stack \
             and not(is_open_bracket(operation_stack[-1])  
                     or is_close_bracket(operation_stack[-1])):
@@ -49,7 +52,7 @@ def parse_to_postfix_form(token_list):
     return postfix_form_stack
 
 def get_token_list(expression):
-    return re.findall(r"\l\o\g\w+|\/\/|\*\*|\.\w+|\W|\w+\.\w+|\w+\.|\w+", expression)
+    return re.findall(r"\/\/|\*\*|\.\w+|\W|\w+\.\w+|\w+\.|\w+", expression)
 
 def is_open_bracket(token):
     return token == "("
@@ -81,13 +84,7 @@ def operation_priority(token):
     elif token in HIGHEST_PRIORITY:
         return 3
 
-def is_valuable(token):
-    try:
-        if not token in CONSTANTS_DICT.keys():
-            c = float(token)
-        return True
-    except:
-        return False
+
 
 
 

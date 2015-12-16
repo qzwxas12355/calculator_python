@@ -3,6 +3,8 @@ import math
 UNARY_FUNCTIONS_DICT = {
     "abs" : abs,
     "log10" : math.log10,
+    "lg" : math.log10,
+    "ln" : math.log,
     "sin" : math.sin,
     "cos" : math.cos,
     "tan" : math.tan,
@@ -60,3 +62,11 @@ def is_function(token):
 
 def is_operator(token):
     return token in OPERATORS
+
+def is_valuable(token):
+    try:
+        if not token in CONSTANTS_DICT.keys():
+            c = float(token)
+        return True
+    except:
+        return False

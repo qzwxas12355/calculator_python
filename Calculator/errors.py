@@ -3,7 +3,7 @@ class SyntaxExpressionError(Exception):
         return "Expression has wrong format"
 
 
-class UnknownFunctionError(Exception):
+class UnknownFunction(Exception):
     def __init__(self, value):
         self.value = value
     def __str__(self):
